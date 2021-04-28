@@ -1,0 +1,76 @@
+--- 
+-
+  hosts: all
+  name: task_11
+  ignore_errors: yes
+  tasks:
+    -
+      file:
+        mode: "0755"
+        path: /dvd
+        state: directory
+      name: "Repo mount_folder creation"
+    -
+      mount:
+        fstype: iso9660
+        opts: "ro,loop"
+        path: /dvd/
+        src: /dev/cdrom
+        state: mounted
+      name: mount_dvd
+    -
+      name: yum_repo_BaseOS
+      yum_repository:
+        baseurl: "file:///dvd/BaseOS"
+        description: Local_baseos
+        file: dvd1
+        gpgcheck: false
+        name: BaseOS
+    -
+      name: yum_repo_AppStream
+      yum_repository:
+        baseurl: "file:///dvd/AppStream"
+        description: Local_appstream
+        file: dvd2
+        gpgcheck: false
+        name: AppStream
+
+--- 
+- 
+  handlers: 
+    - 
+      name: "Start service"
+      service: 
+        name: httpd
+        state: restarted
+  hosts: all
+  tasks:
+    - 
+      name: "Disabling Firewall"
+      shell: "service firewalld stop"
+    - 
+      name: "Set setenforce to 0"
+      shell: "setenforce 0"
+    - 
+      name: "Install package"
+      package: 
+        name: httpd
+        state: present   
+    - 
+      name: "Copy the configuration file"
+      notify: 
+        - "Start service"
+      template: 
+        dest: /etc/httpd/conf/httpd.conf
+        src: httpd.conf
+    - 
+      copy: 
+        content: "Task 11.3 completed successfully\n"
+        dest: /var/www/index.html"
+      name: "Copy the web page"
+    - 
+      name: "start httpd service"
+      service: 
+        name: httpd
+        state: started
+

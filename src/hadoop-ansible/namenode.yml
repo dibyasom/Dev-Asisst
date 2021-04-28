@@ -1,0 +1,7 @@
+- name: copy down.sh in all nodes
+  hosts: "all"
+  tasks: 
+    - name: copy file to remote hosts
+      copy:
+        src: down.sh
+        dest: /home/ec2-user/down.sh
